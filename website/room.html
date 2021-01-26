@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat room</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        input {
+            padding: 0.3rem 0.4rem;
+        }
+
+        .message {
+            padding-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+<main style="display: flex; flex-direction: column; height: 100vh; padding: 1rem;">
+    <div id="messages" style="flex-grow: 1; border: 1px solid black; margin-bottom: 1rem; padding: 1.5rem;"></div>
+    <form action="#" onsubmit="return onSubmit()" style="display: flex;">
+        <label id="username" for="input" style="padding: 0.2rem 0.5rem 0 0;"></label>
+        <input id="input" type="text" style="width: 100%"/>
+    </form>
+</main>
+
+<script>
+    async function authenticateUser() {
+        const roomExists = await checkIfRoomExists();
+        if (roomExists) {
+            await logUser();
+
+            connectSocket();
+        } else {
+            window.alert("Room doesn't exists");
+        }
+    }
+
+    async function checkIfRoomExists() {
+        const res = await fetch("/api/check-room?id=" + roomID);
+        return res.status === 200;
+    }
+
+    async function logUser() {
+        const res = await fetch("/api/check-cookie?room-id=" + roomID);
+        if (res.status === 200) {
+            const usernameMsg = await res.json();
+            username = usernameMsg["message"];
+        } else {
+            username = await registerUser();
+        }
+
+        document.getElementById("username").innerText = username;
+    }
+
+    async function registerUser() {
+        while (true) {
+            const username = window.prompt("Your username:");
+            if (username.length !== 0) {
+                const res = await fetch("/api/register-user?username=" + username + "&room-id=" + roomID);
+                if (res.status !== 200) {
+                    const errMsg = await res.json();
+                    window.alert(errMsg["message"]);
+                } else {
+                    return username;
+                }
+            }
+        }
+    }
+
+    function createMessageElement(username, message) {
+        const newEl = document.createElement("div");
+        newEl.classList.add("message");
+
+        const author = document.createElement("h5");
+        author.innerText = username + ":";
+
+        const msg = document.createElement("p");
+        msg.innerText = message;
+
+        newEl.appendChild(author)
+        newEl.appendChild(msg);
+
+        messagesDiv.appendChild(newEl);
+    }
+
+    function onSubmit() {
+        const inputBox = document.getElementById("input");
+        const input = inputBox.value;
+        inputBox.value = "";
+        const message = {
+            "room-id": roomID,
+            message: input,
+        };
+        ws.send(JSON.stringify(message));
+
+        return false;
+    }
+</script>
+
+<script>
+    const roomID = window.location.pathname.split("/")[2];
+
+    document.title = document.title + " " + roomID;
+
+    let username = "";
+
+    let ws = null;
+
+    authenticateUser();
+
+    const messagesDiv = document.getElementById("messages");
+
+    function connectSocket() {
+        const host = window.location.host;
+        ws = new WebSocket("ws://" + host + "/ws?room-id=" + roomID + "&username=" + username);
+
+        ws.onmessage = (e) => {
+            const parsedMessage = JSON.parse(e.data);
+            if (parsedMessage["room-id"] === roomID)
+                createMessageElement(parsedMessage["username"], parsedMessage["message"]);
+        };
+    }
+</script>
+</body>
+</html>

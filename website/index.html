@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat rooms app</title>
+    <style>
+        * {
+            font-family: sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            padding: 0 10rem;
+            align-items: center;
+        }
+
+        form > * {
+            margin-bottom: 1rem;
+        }
+
+        input, button {
+            font-size: 1.3rem;
+            padding: 0.3rem 0.4rem;
+        }
+    </style>
+</head>
+
+<body style="height: 100vh">
+<div style="display: flex; justify-content: center; align-items: center; height: 100vh">
+    <form id="create-form" action="#" onsubmit="submitCreate(); return false;">
+        <h1>Create chat room</h1>
+        <button>Create</button>
+    </form>
+    <form id="join-form" action="#" onsubmit="submitJoin(); return false;">
+        <h1>Join chat room</h1>
+        <input id="join-room-id" type="text" placeholder="Room ID">
+        <button>Join</button>
+    </form>
+
+    <script>
+        async function submitCreate() {
+            const res = await fetch("/api/create-room").then(res => res.json());
+            window.location.assign(window.location.origin + "/room/" + res["room-id"])
+        }
+
+        async function submitJoin() {
+            const id = document.getElementById("join-room-id").value;
+
+            const res = await fetch("/api/check-room?id=" + id)
+                .catch(e => {
+                    window.alert(e);
+                });
+
+            if (res.status === 200) {
+                const tokenMsg = await res.json();
+                window.location.assign(window.location.origin + "/room/" + id);
+            } else {
+                const errMsg = await res.json();
+                window.alert(errMsg["message"]);
+            }
+        }
+    </script>
+</div>
+</body>
+</html>
