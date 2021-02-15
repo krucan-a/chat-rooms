@@ -63,10 +63,15 @@
         while (true) {
             const username = window.prompt("Your username:");
             if (username.length !== 0) {
-                const res = await fetch("/api/register-user?username=" + username + "&room-id=" + roomID);
-                if (res.status !== 200) {
-                    const errMsg = await res.json();
-                    window.alert(errMsg["message"]);
+                let isErr = false;
+                const res = await fetch("/api/register-user?username=" + username + "&room-id=" + roomID).then(res => {
+                    if (res.status !== 200) {
+                        isErr = true;
+                        return res.json();
+                    }
+                });
+                if (isErr) {
+                    window.alert(res["message"]);
                 } else {
                     return username;
                 }
