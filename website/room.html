@@ -119,7 +119,10 @@
 
     function connectSocket() {
         const host = window.location.host;
-        ws = new WebSocket("ws://" + host + "/ws?room-id=" + roomID + "&username=" + username);
+        const wsUrl = window.location.origin.startsWith("https") ?
+            "wss://" + host + "/ws?room-id=" + roomID + "&username=" + username :
+            "ws://" + host + "/ws?room-id=" + roomID + "&username=" + username;
+        ws = new WebSocket(wsUrl);
 
         ws.onmessage = (e) => {
             const parsedMessage = JSON.parse(e.data);
