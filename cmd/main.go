@@ -9,7 +9,7 @@ import (
 func main() {
 	go websocket.GetHub().Run()
 
-	port := os.Getenv("PORT")
+	port := ":" + os.Getenv("PORT")
 	if len(port) == 0 {
 		port = ":8080"
 	}
