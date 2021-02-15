@@ -74,7 +74,7 @@ func registerUser(apiRoute *gin.RouterGroup) {
 		cookieName := util.GenerateCookieName(roomID)
 		userID := util.GenerateID()
 		log.Printf("Registering user %s as %s", userID, username)
-		c.SetCookie(cookieName, userID, 0, "/", "localhost", false, true)
+		c.SetCookie(cookieName, userID, 0, "/", "herokuapp", false, true)
 	})
 }
 
